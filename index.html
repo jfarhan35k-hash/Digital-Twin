@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f5ed">
+  <title>TwinForge — Factory Challenge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Nunito:wght@600;700;800;900;1000&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <section id="landing" class="landing-screen">
+    <header class="site-header">
+      <a class="brand" href="#" aria-label="TwinForge home"><span class="brand-symbol">✳</span><span>TwinForge<small>THE FACTORY CHALLENGE</small></span></a>
+      <div class="header-note"><span class="status-dot"></span> DIGITAL TWIN SIMULATION</div>
+    </header>
+    <main class="landing-main">
+      <div class="landing-copy">
+        <div class="domain-heading" id="domain-select"><div><h2>Where do you want to start?</h2></div></div>
+        <div class="domain-grid">
+          <button class="domain-card production" data-domain="prod"><span class="domain-icon">▦</span><span class="domain-text"><b>Production</b><small>Flow, output &amp; line balance</small></span><span class="domain-arrow">↗</span></button>
+          <button class="domain-card maintenance" data-domain="maint"><span class="domain-icon">⚙</span><span class="domain-text"><b>Maintenance</b><small>Asset health &amp; uptime</small></span><span class="domain-arrow">↗</span></button>
+          <button class="domain-card quality" data-domain="qual"><span class="domain-icon">◇</span><span class="domain-text"><b>Quality</b><small>Inspection &amp; process control</small></span><span class="domain-arrow">↗</span></button>
+        </div>
+      </div>
+      <div class="landing-art" aria-label="Illustrated top-down factory floor preview">
+        <div class="art-sticker sticker-one"><span>✦</span> SMARTER<br>OPERATIONS</div>
+        <div class="art-sticker sticker-two"><span class="status-dot"></span> FACTORY ONLINE</div>
+        <img src="factory-floor.png" alt="Cartoon top-down view of a modern factory with machines, conveyors, workers and dispatch area">
+        <div class="art-caption"><span class="caption-icon">⌖</span><span><b>PLANT 01</b><small>A whole factory, at a glance</small></span><span class="caption-arrow">↗</span></div>
+      </div>
+    </main>
+  </section>
+
+  <section id="factory-stage" class="factory-stage" hidden>
+    <div class="factory-backdrop"><img src="factory-floor.png" alt="Top-down illustrated factory floor"><svg id="map" viewBox="0 0 1536 1024" preserveAspectRatio="none" role="img" aria-label="Interactive top-down factory floor map"></svg></div>
+    <div class="map-toolbar">
+      <button id="back-domains" class="map-brand" aria-label="Back to domain selection"><span>✳</span> TwinForge</button>
+      <div class="toolbar-context"><span class="status-dot"></span><span id="map-context">PRODUCTION · PLANT 01</span><small>LIVE DIGITAL TWIN</small></div>
+      <div class="toolbar-stats">
+        <div class="toolbar-stat" id="timer-slot"><small>SHIFT TIMER</small><b id="tm">00:00</b></div>
+        <div class="toolbar-stat"><small>ALERTS FIXED</small><b id="fx">0 / 3</b></div>
+        <div class="toolbar-stat impact-stat"><small>VALUE UNLOCKED</small><b id="sv">₹0</b></div>
+      </div>
+    </div>
+    <div class="map-heading compact-map-heading"><span class="map-heading-kicker">PLANT 01 / <b id="map-domain">PRODUCTION FLOOR</b></span></div>
+    <aside id="tool-tray" class="tool-tray" aria-label="Drag a tool to a warning point"></aside>
+    <div class="map-disclaimer">SIMULATED FACTORY ENVIRONMENT · NOT LIVE PLANT DATA</div>
+  </section>
+
+  <section id="feedback-modal" class="feedback-overlay" hidden>
+    <div id="feedback-content" class="feedback-modal" role="dialog" aria-modal="true" aria-live="polite"></div>
+  </section>
+  <section id="end" class="overlay" hidden>
+    <div class="modal results-modal">
+      <div class="complete-mark">✓</div><p class="eyebrow">SHIFT COMPLETE</p><h2 id="eh">Your improvement snapshot</h2><p id="ep"></p>
+      <div class="result-stats" id="es"></div>
+      <label class="name-label" for="nm">Add your name to the leaderboard</label>
+      <div class="name-row"><input id="nm" maxlength="24" placeholder="Your name"><button id="sb" class="primary-button">Save score</button></div>
+      <button id="return-map" class="secondary-button full-button">Return to factory map</button><button id="play-again" class="secondary-button full-button">Choose another domain</button>
+    </div>
+  </section>
+  <section id="leaderboard-modal" class="overlay leaderboard-overlay" hidden>
+    <div class="modal leaderboard-modal">
+      <div class="leaderboard-modal-head"><div><p class="eyebrow">HALL OF IMPROVEMENT</p><h2>Leaderboard</h2></div><button id="close-leaderboard" class="modal-close" aria-label="Close leaderboard">×</button></div>
+      <div class="leaderboard-tools"><span>Saved scores on this browser</span><button id="export-lb" class="secondary-button">↓ Export for Excel</button></div>
+      <p id="lb-empty" class="fineprint">No scores saved yet. Be the first to record a result.</p><div class="table-wrap"><table id="lb"></table></div>
+    </div>
+  </section>
+  <script src="leaderboard.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
