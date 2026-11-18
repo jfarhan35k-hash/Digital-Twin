@@ -167,15 +167,60 @@ const TOOL_INFO = {
 };
 
 const ISSUE_META = {
-  p1:{label:"Parts not tracked",tool:"rfid",clue:"The missing link is automatic identification at each hand-off. Look for a reader that detects tagged pallets without line-of-sight.",reason:"UHF RFID readers capture pallet movement at transfer points. This gives the team a more complete location history and helps reduce search time and line-side stock mismatch."},
-  p2:{label:"One station is slow",tool:"line-sensor",clue:"Compare actual cycle time with takt time. You need live station data to find the constraint, then a safe way to test a new line balance.",reason:"PLC cycle-time data shows which station is above takt time. Twin simulation lets the team test task shifts and buffer changes before changing the live line."},
-  p3:{label:"Dispatch info is late",tool:"dispatch-link",clue:"The fault crosses production, warehouse and transport. Look for a live connection between order completion, goods staging and vehicle slots.",reason:"Linking MES, WMS and TMS data keeps production completion, staging and transport plans aligned, reducing last-minute reshuffling."},
-  m1:{label:"Machine vibration is high",tool:"vibration",clue:"The machine is still running, but its vibration pattern is changing. Look for a tool that reads frequency and vibration levels while it runs.",reason:"An accelerometer and vibration analyser can reveal bearing wear, imbalance and misalignment early, giving maintenance time to inspect before an unplanned stop."},
-  m2:{label:"Power use is high",tool:"energy-meter",clue:"Air use stays high when demand is low. Think about a tool that can find small leaks along pipes and joints.",reason:"An ultrasonic leak detector helps locate compressed-air leaks so repairs can reduce wasted compressor load and energy use."},
-  m3:{label:"Service stops production",tool:"schedule-twin",clue:"A good service plan needs machine condition and the production calendar together. Look for a link between work orders and shift plans.",reason:"A CMMS and production-schedule link helps place maintenance work in lower-impact windows while keeping critical jobs visible."},
-  q1:{label:"Defects are missed",tool:"vision",clue:"The check must happen on every part as it moves through the process. Look for a system that can inspect visible surface features quickly.",reason:"Inline machine vision checks each part near the source of the defect, reducing the amount of work added before a defect is found."},
-  q2:{label:"Quality data is missing",tool:"data-link",clue:"A measurement is useful for root-cause work only when tied to the batch and machine settings at that time. Think about an industrial data connection.",reason:"An OPC UA data link can connect gauge results, batch identity and PLC values, giving investigators the process context behind each result."},
-  q3:{label:"Product size is changing",tool:"trend-monitor",clue:"The readings move slowly over time. Look for a method that tracks patterns and warns before a control limit is crossed.",reason:"SPC control charts track process variation over time and can flag a trend before dimensions move out of specification."}
+  p1:{
+    label:"RFID Pallet Tracking Failure",
+    tool:"rfid",
+    clue:"The missing link is automatic identification at each hand-off. Look for a reader that detects tagged pallets without line-of-sight.",
+    reason:"UHF RFID readers capture pallet movement at transfer points. This gives the team a more complete location history and helps reduce search time and line-side stock mismatch."
+  },
+  p2:{
+    label:"Assembly Station Cycle-Time Deviation",
+    tool:"line-sensor",
+    clue:"Compare actual cycle time with takt time. You need live station data to find the constraint, then a safe way to test a new line balance.",
+    reason:"PLC cycle-time data shows which station is above takt time. Twin simulation lets the team test task shifts and buffer changes before changing the live line."
+  },
+  p3:{
+    label:"Conveyor-to-Dispatch Data Mismatch",
+    tool:"dispatch-link",
+    clue:"The fault crosses production, warehouse and transport. Look for a live connection between order completion, goods staging and vehicle slots.",
+    reason:"Linking MES, WMS and TMS data keeps production completion, staging and transport plans aligned, reducing last-minute reshuffling."
+  },
+  m1:{
+    label:"CNC Spindle Bearing Vibration",
+    tool:"vibration",
+    clue:"The machine is still running, but its vibration pattern is changing. Look for a tool that reads frequency and vibration levels while it runs.",
+    reason:"An accelerometer and vibration analyser can reveal bearing wear, imbalance and misalignment early, giving maintenance time to inspect before an unplanned stop."
+  },
+  m2:{
+    label:"Compressed-Air Line Leakage",
+    tool:"energy-meter",
+    clue:"Air use stays high when demand is low. Think about a tool that can find small leaks along pipes and joints.",
+    reason:"An ultrasonic leak detector helps locate compressed-air leaks so repairs can reduce wasted compressor load and energy use."
+  },
+  m3:{
+    label:"Machine Maintenance Scheduling Conflict",
+    tool:"schedule-twin",
+    clue:"A good service plan needs machine condition and the production calendar together. Look for a link between work orders and shift plans.",
+    reason:"A CMMS and production-schedule link helps place maintenance work in lower-impact windows while keeping critical jobs visible."
+  },
+  q1:{
+    label:"Machined Surface Defect Detection",
+    tool:"vision",
+    clue:"The check must happen on every part as it moves through the process. Look for a system that can inspect visible surface features quickly.",
+    reason:"Inline machine vision checks each part near the source of the defect, reducing the amount of work added before a defect is found."
+  },
+  q2:{
+    label:"Gauge-to-PLC Data Integration Gap",
+    tool:"data-link",
+    clue:"A measurement is useful for root-cause work only when tied to the batch and machine settings at that time. Think about an industrial data connection.",
+    reason:"An OPC UA data link can connect gauge results, batch identity and PLC values, giving investigators the process context behind each result."
+  },
+  q3:{
+    label:"Machining Dimensional Drift",
+    tool:"trend-monitor",
+    clue:"The readings move slowly over time. Look for a method that tracks patterns and warns before a control limit is crossed.",
+    reason:"SPC control charts track process variation over time and can flag a trend before dimensions move out of specification."
+  }
 };
 
 let activeDomain = null, resolved = new Set(), resolvedTools = new Set(), startedAt = 0, timer = null, elapsedPenalty = 0, selectedIssue = null;
