@@ -174,13 +174,13 @@ const ISSUE_META = {
     reason:"UHF RFID readers capture pallet movement at transfer points. This gives the team a more complete location history and helps reduce search time and line-side stock mismatch."
   },
   p2:{
-    label:"Assembly Station Cycle-Time Deviation",
+    label:"Cycle-Time Deviation",
     tool:"line-sensor",
     clue:"Compare actual cycle time with takt time. You need live station data to find the constraint, then a safe way to test a new line balance.",
     reason:"PLC cycle-time data shows which station is above takt time. Twin simulation lets the team test task shifts and buffer changes before changing the live line."
   },
   p3:{
-    label:"Conveyor-to-Dispatch Data Mismatch",
+    label:"Dispatch Data Mismatch",
     tool:"dispatch-link",
     clue:"The fault crosses production, warehouse and transport. Look for a live connection between order completion, goods staging and vehicle slots.",
     reason:"Linking MES, WMS and TMS data keeps production completion, staging and transport plans aligned, reducing last-minute reshuffling."
@@ -198,19 +198,19 @@ const ISSUE_META = {
     reason:"An ultrasonic leak detector helps locate compressed-air leaks so repairs can reduce wasted compressor load and energy use."
   },
   m3:{
-    label:"Machine Maintenance Scheduling Conflict",
+    label:"Maintenance Scheduling Conflict",
     tool:"schedule-twin",
     clue:"A good service plan needs machine condition and the production calendar together. Look for a link between work orders and shift plans.",
     reason:"A CMMS and production-schedule link helps place maintenance work in lower-impact windows while keeping critical jobs visible."
   },
   q1:{
-    label:"Machined Surface Defect Detection",
+    label:"Surface Defect Detection",
     tool:"vision",
     clue:"The check must happen on every part as it moves through the process. Look for a system that can inspect visible surface features quickly.",
     reason:"Inline machine vision checks each part near the source of the defect, reducing the amount of work added before a defect is found."
   },
   q2:{
-    label:"Gauge-to-PLC Data Integration Gap",
+    label:"PLC Data Integration Gap",
     tool:"data-link",
     clue:"A measurement is useful for root-cause work only when tied to the batch and machine settings at that time. Think about an industrial data connection.",
     reason:"An OPC UA data link can connect gauge results, batch identity and PLC values, giving investigators the process context behind each result."
