@@ -231,23 +231,252 @@ const elapsed = () => startedAt ? Math.floor((Date.now()-startedAt)/1000)+elapse
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const moneyRange = (lo,hi) => `${INR.format(lo)}–${INR.format(hi)}`;
 
+// UPDATED MAP RENDERING: Dynamic label sizes and collision-aware positioning.
 function renderMap() {
   const domain = DOMAINS[activeDomain], svg=$("#map");
-  svg.innerHTML = `<defs><filter id="markerShadow" x="-80%" y="-80%" width="260%" height="260%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#263b32" flood-opacity=".28"/></filter></defs>`;
-  domain.issues.forEach((issue)=>{
-    const done=resolved.has(issue.id), meta=ISSUE_META[issue.id], g=document.createElementNS(NS,"g");
-    const x=Math.max(104,Math.min(1432,issue.x));
-    const y=Math.max(122,Math.min(940,issue.y));
-    g.setAttribute("class",`hotspot ${done?"is-done":""}`);
-    g.setAttribute("role","button");g.setAttribute("tabindex","0");
-    g.setAttribute("aria-label",`${meta.label}: ${done?"fixed":"error"}`);
-    const labelWidth=Math.max(132,Math.min(300,meta.label.length*11+34));
-    g.innerHTML=`<g class="issue-label"><rect x="${x-labelWidth/2}" y="${Math.max(12,y-88)}" width="${labelWidth}" height="38" rx="13"/><text x="${x}" y="${Math.max(37,y-63)}" text-anchor="middle">${esc(meta.label)}</text></g><circle cx="${x}" cy="${y}" r="45" class="marker-halo"/><path d="M ${x-22} ${y-34} L ${x+22} ${y-34} L ${x+37} ${y-19} L ${x+37} ${y+19} L ${x+22} ${y+34} L ${x-22} ${y+34} L ${x-37} ${y+19} L ${x-37} ${y-19} Z" class="marker-error" filter="url(#markerShadow)"/><text x="${x}" y="${y+12}" text-anchor="middle" class="marker-symbol">${done?"✓":"×"}</text>`;
-    g.addEventListener("click",()=>{selectedIssue=issue;showHint(issue,null);});
-    g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();showHint(issue,null);}});
-    g.addEventListener("dragover",e=>{if(!done){e.preventDefault();g.classList.add("drop-target");}});
-    g.addEventListener("dragleave",()=>g.classList.remove("drop-target"));
-    g.addEventListener("drop",e=>{e.preventDefault();g.classList.remove("drop-target");const id=e.dataTransfer.getData("text/tool-id");if(id)applyTool(issue,id);});
+
+  svg.innerHTML = `
+    <defs>
+      <filter id="markerShadow" x="-80%" y="-80%" width="260%" height="260%">
+        <feDropShadow dx="0" dy="5" stdDeviation="7"
+          flood-color="#263b32" flood-opacity=".28"/>
+      </filter>
+    </defs>
+  `;
+
+  const placedLabels = [];
+
+  const MAP_WIDTH = 1536;
+  const MAP_HEIGHT = 1024;
+  const LABEL_HEIGHT = 38;
+  const LABEL_GAP = 12;
+  const EDGE_PADDING = 12;
+
+  function overlaps(a, b) {
+    return !(
+      a.right + LABEL_GAP <= b.left ||
+      a.left >= b.right + LABEL_GAP ||
+      a.bottom + LABEL_GAP <= b.top ||
+      a.top >= b.bottom + LABEL_GAP
+    );
+  }
+
+  function isValidPosition(rect) {
+    if (
+      rect.left < EDGE_PADDING ||
+      rect.top < EDGE_PADDING ||
+      rect.right > MAP_WIDTH - EDGE_PADDING ||
+      rect.bottom > MAP_HEIGHT - EDGE_PADDING
+    ) {
+      return false;
+    }
+
+    return !placedLabels.some(existing => overlaps(rect, existing));
+  }
+
+  function positionLabel(x, y, width) {
+    const halfWidth = width / 2;
+
+    const candidates = [
+      { x, y: y - 88 },
+      { x, y: y + 50 },
+      { x: x - halfWidth - 50, y: y - LABEL_HEIGHT / 2 },
+      { x: x + halfWidth + 50, y: y - LABEL_HEIGHT / 2 },
+      { x: x - 80, y: y - 125 },
+      { x: x + 80, y: y - 125 },
+      { x: x - 80, y: y + 90 },
+      { x: x + 80, y: y + 90 }
+    ];
+
+    for (const candidate of candidates) {
+      const rect = {
+        left: candidate.x - halfWidth,
+        right: candidate.x + halfWidth,
+        top: candidate.y,
+        bottom: candidate.y + LABEL_HEIGHT
+      };
+
+      if (isValidPosition(rect)) {
+        placedLabels.push(rect);
+        return candidate;
+      }
+    }
+
+    const step = 48;
+
+    for (let distance = 1; distance <= 15; distance++) {
+      for (let dx = -distance; dx <= distance; dx++) {
+        for (const dy of [-distance, distance]) {
+          const candidate = {
+            x: x + dx * step,
+            y: y + dy * step
+          };
+
+          const rect = {
+            left: candidate.x - halfWidth,
+            right: candidate.x + halfWidth,
+            top: candidate.y,
+            bottom: candidate.y + LABEL_HEIGHT
+          };
+
+          if (isValidPosition(rect)) {
+            placedLabels.push(rect);
+            return candidate;
+          }
+        }
+      }
+
+      for (let dy = -distance + 1; dy < distance; dy++) {
+        for (const dx of [-distance, distance]) {
+          const candidate = {
+            x: x + dx * step,
+            y: y + dy * step
+          };
+
+          const rect = {
+            left: candidate.x - halfWidth,
+            right: candidate.x + halfWidth,
+            top: candidate.y,
+            bottom: candidate.y + LABEL_HEIGHT
+          };
+
+          if (isValidPosition(rect)) {
+            placedLabels.push(rect);
+            return candidate;
+          }
+        }
+      }
+    }
+
+    const fallback = {
+      x: Math.max(
+        halfWidth + EDGE_PADDING,
+        Math.min(MAP_WIDTH - halfWidth - EDGE_PADDING, x)
+      ),
+      y: Math.max(
+        EDGE_PADDING,
+        Math.min(MAP_HEIGHT - LABEL_HEIGHT - EDGE_PADDING, y - 88)
+      )
+    };
+
+    const rect = {
+      left: fallback.x - halfWidth,
+      right: fallback.x + halfWidth,
+      top: fallback.y,
+      bottom: fallback.y + LABEL_HEIGHT
+    };
+
+    placedLabels.push(rect);
+    return fallback;
+  }
+
+  domain.issues.forEach((issue) => {
+    const done = resolved.has(issue.id);
+    const meta = ISSUE_META[issue.id];
+
+    const g = document.createElementNS(NS, "g");
+
+    const x = Math.max(104, Math.min(1432, issue.x));
+    const y = Math.max(122, Math.min(940, issue.y));
+
+    g.setAttribute("class", `hotspot ${done ? "is-done" : ""}`);
+    g.setAttribute("role", "button");
+    g.setAttribute("tabindex", "0");
+    g.setAttribute(
+      "aria-label",
+      `${meta.label}: ${done ? "fixed" : "error"}`
+    );
+
+    // Width changes according to the text length.
+    const labelWidth = Math.max(
+      150,
+      Math.min(360, meta.label.length * 9 + 36)
+    );
+
+    const labelPosition = positionLabel(x, y, labelWidth);
+
+    const labelX = labelPosition.x;
+    const labelY = labelPosition.y;
+
+    g.innerHTML = `
+      <g class="issue-label">
+        <rect
+          x="${labelX - labelWidth / 2}"
+          y="${labelY}"
+          width="${labelWidth}"
+          height="${LABEL_HEIGHT}"
+          rx="19"
+        />
+        <text
+          x="${labelX}"
+          y="${labelY + 25}"
+          text-anchor="middle"
+        >${esc(meta.label)}</text>
+      </g>
+
+      <circle
+        cx="${x}"
+        cy="${y}"
+        r="45"
+        class="marker-halo"
+      />
+
+      <path
+        d="
+          M ${x-22} ${y-34}
+          L ${x+22} ${y-34}
+          L ${x+37} ${y-19}
+          L ${x+37} ${y+19}
+          L ${x+22} ${y+34}
+          L ${x-22} ${y+34}
+          L ${x-37} ${y+19}
+          L ${x-37} ${y-19}
+          Z
+        "
+        class="marker-error"
+        filter="url(#markerShadow)"
+      />
+
+      <text
+        x="${x}"
+        y="${y+12}"
+        text-anchor="middle"
+        class="marker-symbol"
+      >${done ? "✓" : "×"}</text>
+    `;
+
+    g.addEventListener("click", () => {
+      selectedIssue = issue;
+      showHint(issue, null);
+    });
+
+    g.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        showHint(issue, null);
+      }
+    });
+
+    g.addEventListener("dragover", e => {
+      if (!done) {
+        e.preventDefault();
+        g.classList.add("drop-target");
+      }
+    });
+
+    g.addEventListener("dragleave", () => {
+      g.classList.remove("drop-target");
+    });
+
+    g.addEventListener("drop", e => {
+      e.preventDefault();
+      g.classList.remove("drop-target");
+
+      const id = e.dataTransfer.getData("text/tool-id");
+
+      if (id) applyTool(issue, id);
+    });
+
     svg.appendChild(g);
   });
 }
