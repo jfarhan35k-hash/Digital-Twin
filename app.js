@@ -9,8 +9,8 @@ const DOMAINS = {
     issues: [
       {
         id:"p1", x:335, y:450,
-        title:"Material traceability gaps at line-side",
-        summary:"Pallet movements between stores, kitting and assembly are not consistently captured. Missing RFID hand-off events create inaccurate WIP locations, stock mismatches and delays in material retrieval.",
+        title:"Manual pallet tracking gaps at line-side",
+        summary:"Pallet movements between stores, kitting and assembly are recorded manually. Incomplete hand-off records create inaccurate WIP locations, stock mismatches and delays in material retrieval.",
         impact:"Potential to reduce material-search effort by 15–25%",
         rupees:[350000,650000],
         loss:"Search time · line waiting · manual reconciliation",
@@ -144,43 +144,43 @@ const DOMAINS = {
 
 const TOOL_INFO = {
   prod: [
-    {id:"rfid",name:"UHF RFID reader",icon:"⌁"},
-    {id:"line-sensor",name:"PLC cycle-time sensor",icon:"◷"},
-    {id:"dispatch-link",name:"MES–WMS–TMS link",icon:"⇄"},
-    {id:"barcode",name:"Handheld barcode scanner",icon:"▤"},
-    {id:"forklift-tag",name:"Forklift proximity tag",icon:"▰"}
+    {id:"rfid",name:"RFID",icon:"⌁"},
+    {id:"line-sensor",name:"PLC Sensor",icon:"◷"},
+    {id:"dispatch-link",name:"Dispatch Link",icon:"⇄"},
+    {id:"barcode",name:"Barcode Scanner",icon:"▤"},
+    {id:"forklift-tag",name:"Forklift Tag",icon:"▰"}
   ],
   maint: [
-    {id:"vibration",name:"Accelerometer analyser",icon:"〰"},
-    {id:"energy-meter",name:"Ultrasonic leak detector",icon:"ϟ"},
-    {id:"schedule-twin",name:"CMMS schedule link",icon:"▦"},
-    {id:"thermal-camera",name:"Thermal camera",icon:"◉"},
-    {id:"pressure-gauge",name:"Pressure gauge",icon:"◴"}
+    {id:"vibration",name:"Vibration Sensor",icon:"〰"},
+    {id:"energy-meter",name:"Leak Detector",icon:"ϟ"},
+    {id:"schedule-twin",name:"CMMS Link",icon:"▦"},
+    {id:"thermal-camera",name:"Thermal Camera",icon:"◉"},
+    {id:"pressure-gauge",name:"Pressure Gauge",icon:"◴"}
   ],
   qual: [
-    {id:"vision",name:"Inline vision system",icon:"◎"},
-    {id:"data-link",name:"OPC UA data link",icon:"⌘"},
-    {id:"trend-monitor",name:"SPC control chart",icon:"⌁"},
-    {id:"caliper",name:"Digital caliper",icon:"⊣"},
-    {id:"sample-kit",name:"Manual sample kit",icon:"▣"}
+    {id:"vision",name:"Vision Camera",icon:"◎"},
+    {id:"data-link",name:"OPC UA Link",icon:"⌘"},
+    {id:"trend-monitor",name:"SPC Chart",icon:"⌁"},
+    {id:"caliper",name:"Digital Caliper",icon:"⊣"},
+    {id:"sample-kit",name:"Sample Kit",icon:"▣"}
   ]
 };
 
 const ISSUE_META = {
   p1:{
-    label:"RFID Pallet Tracking Failure",
+    label:"Manual Pallet Tracking Failure",
     tool:"rfid",
     clue:"The missing link is automatic identification at each hand-off. Look for a reader that detects tagged pallets without line-of-sight.",
-    reason:"UHF RFID readers capture pallet movement at transfer points. This gives the team a more complete location history and helps reduce search time and line-side stock mismatch."
+    reason:"RFID readers capture pallet movement at transfer points. This gives the team a more complete location history and helps reduce search time and line-side stock mismatch."
   },
   p2:{
-    label:"Cycle-Time Deviation",
+    label:"Assembly Station Cycle-Time Deviation",
     tool:"line-sensor",
     clue:"Compare actual cycle time with takt time. You need live station data to find the constraint, then a safe way to test a new line balance.",
     reason:"PLC cycle-time data shows which station is above takt time. Twin simulation lets the team test task shifts and buffer changes before changing the live line."
   },
   p3:{
-    label:"Dispatch Data Mismatch",
+    label:"Conveyor-to-Dispatch Data Mismatch",
     tool:"dispatch-link",
     clue:"The fault crosses production, warehouse and transport. Look for a live connection between order completion, goods staging and vehicle slots.",
     reason:"Linking MES, WMS and TMS data keeps production completion, staging and transport plans aligned, reducing last-minute reshuffling."
@@ -198,19 +198,19 @@ const ISSUE_META = {
     reason:"An ultrasonic leak detector helps locate compressed-air leaks so repairs can reduce wasted compressor load and energy use."
   },
   m3:{
-    label:"Maintenance Scheduling Conflict",
+    label:"Machine Maintenance Scheduling Conflict",
     tool:"schedule-twin",
     clue:"A good service plan needs machine condition and the production calendar together. Look for a link between work orders and shift plans.",
     reason:"A CMMS and production-schedule link helps place maintenance work in lower-impact windows while keeping critical jobs visible."
   },
   q1:{
-    label:"Surface Defect Detection",
+    label:"Machined Surface Defect Detection",
     tool:"vision",
     clue:"The check must happen on every part as it moves through the process. Look for a system that can inspect visible surface features quickly.",
     reason:"Inline machine vision checks each part near the source of the defect, reducing the amount of work added before a defect is found."
   },
   q2:{
-    label:"PLC Data Integration Gap",
+    label:"Gauge-to-PLC Data Integration Gap",
     tool:"data-link",
     clue:"A measurement is useful for root-cause work only when tied to the batch and machine settings at that time. Think about an industrial data connection.",
     reason:"An OPC UA data link can connect gauge results, batch identity and PLC values, giving investigators the process context behind each result."
@@ -231,7 +231,6 @@ const elapsed = () => startedAt ? Math.floor((Date.now()-startedAt)/1000)+elapse
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const moneyRange = (lo,hi) => `${INR.format(lo)}–${INR.format(hi)}`;
 
-// UPDATED MAP RENDERING: Dynamic label sizes and collision-aware positioning.
 function renderMap() {
   const domain = DOMAINS[activeDomain], svg=$("#map");
 
@@ -387,7 +386,6 @@ function renderMap() {
       `${meta.label}: ${done ? "fixed" : "error"}`
     );
 
-    // Width changes according to the text length.
     const labelWidth = Math.max(
       150,
       Math.min(360, meta.label.length * 9 + 36)
@@ -483,46 +481,143 @@ function renderMap() {
 
 function renderToolTray(){
   const tools=TOOL_INFO[activeDomain].filter(t=>!resolvedTools.has(t.id));
-  $("#tool-tray").innerHTML=`<div class="tool-tray-head"><b>TOOLS</b><small>${tools.length} tools left</small></div><div class="tool-scroll" id="tool-scroll"><div class="tool-items">${tools.map(t=>`<button class="tool-chip" draggable="true" data-tool="${t.id}" aria-label="Drag ${t.name} to an error"><span class="tool-icon">${t.icon}</span><span>${t.name}</span></button>`).join("")}</div></div><input class="tool-slider" id="tool-slider" type="range" min="0" max="100" value="0" aria-label="Move through tools">`;
+
+  $("#tool-tray").innerHTML=`
+    <div class="tool-tray-head">
+      <b>TOOLS</b>
+      <small>${tools.length} tools left</small>
+    </div>
+    <div class="tool-scroll" id="tool-scroll">
+      <div class="tool-items">
+        ${tools.map(t=>`
+          <button
+            class="tool-chip"
+            draggable="true"
+            data-tool="${t.id}"
+            aria-label="Drag ${t.name} to an error"
+            type="button"
+          >
+            <span class="tool-icon">${t.icon}</span>
+            <span>${t.name}</span>
+          </button>
+        `).join("")}
+      </div>
+    </div>
+    <input class="tool-slider" id="tool-slider" type="range" min="0" max="100" value="0" aria-label="Move through tools">
+  `;
+
   const scroller=$("#tool-scroll"), slider=$("#tool-slider");
-  const syncSlider=()=>{const max=scroller.scrollWidth-scroller.clientWidth;slider.value=max>0?Math.round(scroller.scrollLeft/max*100):0;};
+
+  const syncSlider=()=>{
+    const max=scroller.scrollWidth-scroller.clientWidth;
+    slider.value=max>0?Math.round(scroller.scrollLeft/max*100):0;
+  };
+
   scroller.addEventListener("scroll",syncSlider,{passive:true});
-  slider.addEventListener("input",()=>{const max=scroller.scrollWidth-scroller.clientWidth;scroller.scrollLeft=max*(Number(slider.value)/100);});
-  $("#tool-tray").querySelectorAll("[data-tool]").forEach(btn=>{
-    btn.addEventListener("dragstart",e=>{e.dataTransfer.setData("text/tool-id",btn.dataset.tool);e.dataTransfer.effectAllowed="move";btn.classList.add("is-dragging");});
-    btn.addEventListener("dragend",()=>btn.classList.remove("is-dragging"));
-    btn.addEventListener("click",()=>{const pending=selectedIssue&&!resolved.has(selectedIssue.id)?selectedIssue:DOMAINS[activeDomain].issues.find(i=>!resolved.has(i.id));if(pending)applyTool(pending,btn.dataset.tool);});
+
+  slider.addEventListener("input",()=>{
+    const max=scroller.scrollWidth-scroller.clientWidth;
+    scroller.scrollLeft=max*(Number(slider.value)/100);
   });
+
+  // Tools can ONLY be used by dragging them onto a map issue.
+  // No click handler is attached to tool buttons.
+  $("#tool-tray").querySelectorAll("[data-tool]").forEach(btn=>{
+    btn.addEventListener("dragstart",e=>{
+      e.dataTransfer.setData("text/tool-id",btn.dataset.tool);
+      e.dataTransfer.effectAllowed="move";
+      btn.classList.add("is-dragging");
+    });
+
+    btn.addEventListener("dragend",()=>{
+      btn.classList.remove("is-dragging");
+    });
+  });
+
   requestAnimationFrame(syncSlider);
 }
 
 function chooseDomain(id) {
-  activeDomain=id;resolved=new Set();resolvedTools=new Set();startedAt=Date.now();elapsedPenalty=0;
+  activeDomain=id;
+  resolved=new Set();
+  resolvedTools=new Set();
+  startedAt=Date.now();
+  elapsedPenalty=0;
+
   $("#timer-slot").classList.remove("leaderboard-slot");
   $("#timer-slot").innerHTML=`<small>SHIFT TIMER</small><b id="tm">00:00</b>`;
-  $("#sb").textContent="Save score";$("#sb").disabled=false;$("#nm").value="";
-  totalImpactLow=0;totalImpactHigh=0;totalTimeSavedLow=0;totalTimeSavedHigh=0;score=0;
+
+  $("#sb").textContent="Save score";
+  $("#sb").disabled=false;
+  $("#nm").value="";
+
+  totalImpactLow=0;
+  totalImpactHigh=0;
+  totalTimeSavedLow=0;
+  totalTimeSavedHigh=0;
+  score=0;
+
   document.body.classList.add("map-mode");
-  $("#landing").hidden=true;$("#factory-stage").hidden=false;
+  $("#landing").hidden=true;
+  $("#factory-stage").hidden=false;
+
   $("#map-domain").textContent=`${DOMAINS[id].name.toUpperCase()} FLOOR`;
   $("#map-context").textContent=`${DOMAINS[id].name} · PLANT 01`;
-  $("#fx").textContent="0 / 3";$("#tm").textContent="00:00";$("#sv").textContent="₹0";
+
+  $("#fx").textContent="0 / 3";
+  $("#tm").textContent="00:00";
+  $("#sv").textContent="₹0";
+
   $("#feedback-modal").hidden=true;
-  renderMap();renderToolTray();updateProgress();clearInterval(timer);timer=setInterval(()=>$("#tm").textContent=fmtTime(elapsed()),250);
+
+  renderMap();
+  renderToolTray();
+  updateProgress();
+
+  clearInterval(timer);
+  timer=setInterval(()=>$("#tm").textContent=fmtTime(elapsed()),250);
 }
 
-function backToDomains(){clearInterval(timer);timer=null;activeDomain=null;document.body.classList.remove("map-mode");$("#factory-stage").hidden=true;$("#landing").hidden=false;$("#feedback-modal").hidden=true;}
-function updateProgress(){$("#fx").textContent=`${resolved.size} / 3`;}
+function backToDomains(){
+  clearInterval(timer);
+  timer=null;
+  activeDomain=null;
+  document.body.classList.remove("map-mode");
+  $("#factory-stage").hidden=true;
+  $("#landing").hidden=false;
+  $("#feedback-modal").hidden=true;
+}
+
+function updateProgress(){
+  $("#fx").textContent=`${resolved.size} / 3`;
+}
 
 function showHint(issue,toolId){
   if(resolved.has(issue.id))return;
-  const meta=ISSUE_META[issue.id], expected=TOOL_INFO[activeDomain].find(t=>t.id===meta.tool);
+
+  const meta=ISSUE_META[issue.id];
   const correct=toolId===meta.tool;
+
   $("#feedback-content").innerHTML=toolId===null
-    ? `<div class="feedback-mark is-hint">!</div><p class="feedback-kicker">FACTORY ERROR</p><h2>${esc(meta.label)}</h2><p>${esc(meta.clue)}</p><button class="primary-button full-button" id="feedback-back">Back to map <span>→</span></button>`
+    ? `<div class="feedback-mark is-hint">!</div>
+       <p class="feedback-kicker">FACTORY ERROR</p>
+       <h2>${esc(meta.label)}</h2>
+       <p>${esc(meta.clue)}</p>
+       <button class="primary-button full-button" id="feedback-back">Back to map <span>→</span></button>`
+
     : correct
-    ? `<div class="feedback-mark is-correct">✓</div><p class="feedback-kicker">GOOD MATCH</p><h2>Correct</h2><p>${esc(meta.reason)}</p><button class="primary-button full-button" id="feedback-back">Back to map <span>→</span></button>`
-    : `<div class="feedback-mark is-hint">↗</div><p class="feedback-kicker">THINK IT THROUGH</p><h2>Not quite</h2><p>${esc(meta.clue)}</p><button class="primary-button full-button" id="feedback-back">Back to map <span>→</span></button>`;
+    ? `<div class="feedback-mark is-correct">✓</div>
+       <p class="feedback-kicker">GOOD MATCH</p>
+       <h2>Correct</h2>
+       <p>${esc(meta.reason)}</p>
+       <button class="primary-button full-button" id="feedback-back">Back to map <span>→</span></button>`
+
+    : `<div class="feedback-mark is-hint">↗</div>
+       <p class="feedback-kicker">THINK IT THROUGH</p>
+       <h2>Not quite</h2>
+       <p>${esc(meta.clue)}</p>
+       <button class="primary-button full-button" id="feedback-back">Back to map <span>→</span></button>`;
+
   $("#feedback-modal").hidden=false;
 
   if(correct)completeIssue(issue);
@@ -530,66 +625,174 @@ function showHint(issue,toolId){
   const closeFeedback=()=>{
     $("#feedback-modal").hidden=true;
   };
+
   $("#feedback-back").onclick=(event)=>{
     event.preventDefault();
     event.stopPropagation();
     closeFeedback();
   };
+
   $("#feedback-modal").onclick=(event)=>{
     if(event.target===$("#feedback-modal"))closeFeedback();
   };
 }
 
-function applyTool(issue,toolId){if(resolved.has(issue.id))return;showHint(issue,toolId);}
+function applyTool(issue,toolId){
+  if(resolved.has(issue.id))return;
+  showHint(issue,toolId);
+}
 
 function completeIssue(issue){
   selectedIssue=null;
-  const meta=ISSUE_META[issue.id], idx=DOMAINS[activeDomain].issues.indexOf(issue);
-  const [lo,hi]=issue.rupees;const option=issue.options[2];
-  totalImpactLow+=Math.round(lo*option[3]/100);totalImpactHigh+=Math.round(hi*option[4]/100);
-  totalTimeSavedLow+=12;totalTimeSavedHigh+=20;score+=100;
-  resolved.add(issue.id);resolvedTools.add(meta.tool);renderMap();renderToolTray();updateProgress();
+
+  const meta=ISSUE_META[issue.id];
+  const idx=DOMAINS[activeDomain].issues.indexOf(issue);
+
+  const [lo,hi]=issue.rupees;
+  const option=issue.options[2];
+
+  totalImpactLow+=Math.round(lo*option[3]/100);
+  totalImpactHigh+=Math.round(hi*option[4]/100);
+
+  totalTimeSavedLow+=12;
+  totalTimeSavedHigh+=20;
+  score+=100;
+
+  resolved.add(issue.id);
+  resolvedTools.add(meta.tool);
+
+  renderMap();
+  renderToolTray();
+  updateProgress();
+
   $("#sv").textContent=INR.format(totalImpactLow)+"+";
+
   if(resolved.size===3)finishDomain();
 }
 
 function finishDomain(){
-  clearInterval(timer);timer=null;const duration=elapsed();score+=Math.max(0,Math.round(300-duration/3));$("#eh").textContent=`${DOMAINS[activeDomain].name} shift complete`;
-  $("#ep").textContent="All three interventions matched the operational issue. Validate the illustrative impact against plant baselines before treating it as realised savings.";
-  $("#es").innerHTML=`<div><small>TIME TAKEN</small><b>${fmtTime(duration)}</b></div><div><small>MODELLED ANNUAL VALUE</small><b>${moneyRange(totalImpactLow,totalImpactHigh)}</b></div><div><small>TIME RECOVERY RANGE</small><b>${totalTimeSavedLow}–${totalTimeSavedHigh}%</b></div>`;
-  $("#timer-slot").classList.add("leaderboard-slot");$("#timer-slot").innerHTML=`<button id="open-leaderboard">🏆 Leaderboard</button>`;
+  clearInterval(timer);
+  timer=null;
+
+  const duration=elapsed();
+
+  score+=Math.max(0,Math.round(300-duration/3));
+
+  $("#eh").textContent=`${DOMAINS[activeDomain].name} shift complete`;
+
+  $("#ep").textContent="All three interventions matched the operational issue. Validate the illustrative impact against plant baselines before treating them as realised savings.";
+
+  $("#es").innerHTML=`
+    <div><small>TIME TAKEN</small><b>${fmtTime(duration)}</b></div>
+    <div><small>MODELLED ANNUAL VALUE</small><b>${moneyRange(totalImpactLow,totalImpactHigh)}</b></div>
+    <div><small>TIME RECOVERY RANGE</small><b>${totalTimeSavedLow}–${totalTimeSavedHigh}%</b></div>
+  `;
+
+  $("#timer-slot").classList.add("leaderboard-slot");
+  $("#timer-slot").innerHTML=`<button id="open-leaderboard">🏆 Leaderboard</button>`;
+
   $("#open-leaderboard").onclick=openLeaderboard;
-  $("#end").hidden=false;renderLeaderboard();
+
+  $("#end").hidden=false;
+  renderLeaderboard();
 }
 
 function renderLeaderboard(){
-  const rows=window.Automation ArenaLeaderboard?window.Automation ArenaLeaderboard.getAll().slice(0,50):[];
+  const rows=window.TwinForgeLeaderboard
+    ?window.TwinForgeLeaderboard.getAll().slice(0,50)
+    :[];
+
   $("#lb-empty").hidden=rows.length>0;
-  $("#lb").innerHTML=rows.length?`<thead><tr><th>RANK</th><th>PLAYER</th><th>DOMAIN</th><th>SCORE</th><th>DATE</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.name)}</td><td>${esc(r.domain)}</td><td>${r.score}</td><td>${esc(r.date)}</td></tr>`).join("")}</tbody>`:"";
+
+  $("#lb").innerHTML=rows.length
+    ? `<thead>
+         <tr>
+           <th>RANK</th>
+           <th>PLAYER</th>
+           <th>DOMAIN</th>
+           <th>SCORE</th>
+           <th>DATE</th>
+         </tr>
+       </thead>
+       <tbody>
+         ${rows.map((r,i)=>`
+           <tr>
+             <td>${i+1}</td>
+             <td>${esc(r.name)}</td>
+             <td>${esc(r.domain)}</td>
+             <td>${r.score}</td>
+             <td>${esc(r.date)}</td>
+           </tr>
+         `).join("")}
+       </tbody>`
+    :"";
 }
 
 function saveScore(){
   const name=$("#nm").value.trim()||"Player";
-  const result=window.Automation ArenaLeaderboard.add({name,domain:DOMAINS[activeDomain].name,score,date:new Date().toLocaleDateString("en-IN")});
-  if(result.ok){$("#sb").textContent="Saved ✓";$("#sb").disabled=true;renderLeaderboard();}
-  else{$("#lb-empty").hidden=false;$("#lb-empty").textContent="Could not save this score. Check browser storage.";}
+
+  const result=window.TwinForgeLeaderboard.add({
+    name,
+    domain:DOMAINS[activeDomain].name,
+    score,
+    date:new Date().toLocaleDateString("en-IN")
+  });
+
+  if(result.ok){
+    $("#sb").textContent="Saved ✓";
+    $("#sb").disabled=true;
+    renderLeaderboard();
+  }else{
+    $("#lb-empty").hidden=false;
+    $("#lb-empty").textContent="Could not save this score. Check browser storage.";
+  }
 }
 
-function openLeaderboard(){$("#end").hidden=true;$("#leaderboard-modal").hidden=false;renderLeaderboard();}
-function closeLeaderboard(){$("#leaderboard-modal").hidden=true;}
+function openLeaderboard(){
+  $("#end").hidden=true;
+  $("#leaderboard-modal").hidden=false;
+  renderLeaderboard();
+}
+
+function closeLeaderboard(){
+  $("#leaderboard-modal").hidden=true;
+}
 
 function exportLeaderboard(){
-  const result=window.Automation ArenaLeaderboard.exportCSV();
-  if(!result.ok)alert("There are no saved leaderboard results to export yet.");
+  const result=window.TwinForgeLeaderboard.exportCSV();
+
+  if(!result.ok){
+    alert("There are no saved leaderboard results to export yet.");
+  }
 }
 
-window.addEventListener("Automation Arena:leaderboard-updated",renderLeaderboard);
-document.querySelectorAll("[data-domain]").forEach(b=>b.addEventListener("click",()=>chooseDomain(b.dataset.domain)));
+window.addEventListener("twinforge:leaderboard-updated",renderLeaderboard);
+
+document.querySelectorAll("[data-domain]").forEach(b=>{
+  b.addEventListener("click",()=>chooseDomain(b.dataset.domain));
+});
+
 $("#back-domains").addEventListener("click",backToDomains);
 $("#sb").addEventListener("click",saveScore);
 $("#export-lb").addEventListener("click",exportLeaderboard);
 $("#close-leaderboard").addEventListener("click",closeLeaderboard);
-$("#leaderboard-modal").addEventListener("click",e=>{if(e.target===$("#leaderboard-modal"))closeLeaderboard();});
-$("#return-map").addEventListener("click",()=>{$("#end").hidden=true;});
-$("#play-again").addEventListener("click",()=>{$("#end").hidden=true;$("#leaderboard-modal").hidden=true;backToDomains();});
-$("#feedback-modal").addEventListener("click",e=>{if(e.target===$("#feedback-modal"))$("#feedback-modal").hidden=true;});
+
+$("#leaderboard-modal").addEventListener("click",e=>{
+  if(e.target===$("#leaderboard-modal"))closeLeaderboard();
+});
+
+$("#return-map").addEventListener("click",()=>{
+  $("#end").hidden=true;
+});
+
+$("#play-again").addEventListener("click",()=>{
+  $("#end").hidden=true;
+  $("#leaderboard-modal").hidden=true;
+  backToDomains();
+});
+
+$("#feedback-modal").addEventListener("click",e=>{
+  if(e.target===$("#feedback-modal")){
+    $("#feedback-modal").hidden=true;
+  }
+});
