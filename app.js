@@ -415,7 +415,7 @@ function renderMap() {
       <circle
         cx="${x}"
         cy="${y}"
-        r="45"
+        r="60"
         class="marker-halo"
       />
 
