@@ -563,14 +563,14 @@ function finishDomain(){
 }
 
 function renderLeaderboard(){
-  const rows=window.TwinForgeLeaderboard?window.TwinForgeLeaderboard.getAll().slice(0,50):[];
+  const rows=window.Automation ArenaLeaderboard?window.Automation ArenaLeaderboard.getAll().slice(0,50):[];
   $("#lb-empty").hidden=rows.length>0;
   $("#lb").innerHTML=rows.length?`<thead><tr><th>RANK</th><th>PLAYER</th><th>DOMAIN</th><th>SCORE</th><th>DATE</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.name)}</td><td>${esc(r.domain)}</td><td>${r.score}</td><td>${esc(r.date)}</td></tr>`).join("")}</tbody>`:"";
 }
 
 function saveScore(){
   const name=$("#nm").value.trim()||"Player";
-  const result=window.TwinForgeLeaderboard.add({name,domain:DOMAINS[activeDomain].name,score,date:new Date().toLocaleDateString("en-IN")});
+  const result=window.Automation ArenaLeaderboard.add({name,domain:DOMAINS[activeDomain].name,score,date:new Date().toLocaleDateString("en-IN")});
   if(result.ok){$("#sb").textContent="Saved ✓";$("#sb").disabled=true;renderLeaderboard();}
   else{$("#lb-empty").hidden=false;$("#lb-empty").textContent="Could not save this score. Check browser storage.";}
 }
@@ -579,11 +579,11 @@ function openLeaderboard(){$("#end").hidden=true;$("#leaderboard-modal").hidden=
 function closeLeaderboard(){$("#leaderboard-modal").hidden=true;}
 
 function exportLeaderboard(){
-  const result=window.TwinForgeLeaderboard.exportCSV();
+  const result=window.Automation ArenaLeaderboard.exportCSV();
   if(!result.ok)alert("There are no saved leaderboard results to export yet.");
 }
 
-window.addEventListener("twinforge:leaderboard-updated",renderLeaderboard);
+window.addEventListener("Automation Arena:leaderboard-updated",renderLeaderboard);
 document.querySelectorAll("[data-domain]").forEach(b=>b.addEventListener("click",()=>chooseDomain(b.dataset.domain)));
 $("#back-domains").addEventListener("click",backToDomains);
 $("#sb").addEventListener("click",saveScore);
