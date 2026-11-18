@@ -7,21 +7,45 @@ const DOMAINS = {
     name: "Production", title: "Production floor", color: "#2796d2",
     stations: ["Inbound", "Assembly", "Dispatch"],
     issues: [
-      { id:"p1", x:335, y:450, title:"Material movement is hard to trace", summary:"Pallets move between stores, kitting and assembly without reliable live location records. Search time rises and line-side stock counts do not match.", impact:"Potential to reduce material-search effort by 15–25%", rupees:[350000,650000], loss:"Search time · line waiting · manual reconciliation", options:[
-        ["Add more manual tracking staff","Adds capacity, but the process still depends on manual updates.",0,5,8],
-        ["Introduce barcode scans at transfer points","Improves traceability, though each movement still needs a scan.",1,12,18],
-        ["Connect RFID events to a live production twin","Creates near-real-time location visibility and highlights flow bottlenecks.",2,18,25]
-      ]},
-      { id:"p2", x:790, y:455, title:"Assembly line flow is uneven", summary:"One station runs slower than takt time while upstream stations keep feeding it. A queue forms and downstream stations are starved.", impact:"Potential to reduce avoidable waiting by 10–20%", rupees:[450000,800000], loss:"Idle time · queue build-up · missed throughput", options:[
-        ["Increase buffer inventory","May soften short interruptions but can hide the underlying imbalance.",0,4,7],
-        ["Review line balance once per shift","Improves awareness, but relies on periodic manual analysis.",1,9,14],
-        ["Use live cycle-time data and twin simulations","Tests line-balance changes virtually and surfaces bottlenecks as they form.",2,15,20]
-      ]},
-      { id:"p3", x:1260, y:735, title:"Dispatch planning changes too late", summary:"Production completion, warehouse staging and vehicle slots sit in separate systems. Late updates force loading teams to reshuffle pallets.", impact:"Potential to reduce dispatch rework by 12–22%", rupees:[300000,600000], loss:"Rescheduling · staging rework · delayed hand-offs", options:[
-        ["Add a manual dispatch checklist","Creates discipline but does not synchronize live status.",0,4,8],
-        ["Create a shared dispatch dashboard","Improves coordination, with some manual data refresh.",1,10,15],
-        ["Link production completion to a twin-based dispatch plan","Aligns staging and dispatch with live production progress.",2,16,22]
-      ]}
+      {
+        id:"p1", x:335, y:450,
+        title:"Material traceability gaps at line-side",
+        summary:"Pallet movements between stores, kitting and assembly are not consistently captured. Missing RFID hand-off events create inaccurate WIP locations, stock mismatches and delays in material retrieval.",
+        impact:"Potential to reduce material-search effort by 15–25%",
+        rupees:[350000,650000],
+        loss:"Search time · line waiting · manual reconciliation",
+        options:[
+          ["Add more manual tracking staff","Adds capacity, but the process still depends on manual updates.",0,5,8],
+          ["Introduce barcode scans at transfer points","Improves traceability, though each movement still needs a scan.",1,12,18],
+          ["Connect RFID events to a live production twin","Creates near-real-time location visibility and highlights flow bottlenecks.",2,18,25]
+        ]
+      },
+      {
+        id:"p2", x:790, y:455,
+        title:"Assembly cycle time exceeds takt time",
+        summary:"PLC cycle-time readings indicate that one assembly station consistently exceeds the required takt time. Upstream stations continue feeding components, creating WIP accumulation and downstream starvation.",
+        impact:"Potential to reduce avoidable waiting by 10–20%",
+        rupees:[450000,800000],
+        loss:"Idle time · queue build-up · missed throughput",
+        options:[
+          ["Increase buffer inventory","May soften short interruptions but can hide the underlying imbalance.",0,4,7],
+          ["Review line balance once per shift","Improves awareness, but relies on periodic manual analysis.",1,9,14],
+          ["Use live cycle-time data and twin simulations","Tests line-balance changes virtually and surfaces bottlenecks as they form.",2,15,20]
+        ]
+      },
+      {
+        id:"p3", x:1260, y:735,
+        title:"MES–WMS dispatch synchronization failure",
+        summary:"Production completion signals from the MES are not synchronized with warehouse staging and transport schedules. Delayed order-status updates result in incorrect pallet allocation, vehicle-slot conflicts and dispatch rescheduling.",
+        impact:"Potential to reduce dispatch rework by 12–22%",
+        rupees:[300000,600000],
+        loss:"Rescheduling · staging rework · delayed hand-offs",
+        options:[
+          ["Add a manual dispatch checklist","Creates discipline but does not synchronize live status.",0,4,8],
+          ["Create a shared dispatch dashboard","Improves coordination, with some manual data refresh.",1,10,15],
+          ["Link production completion to a twin-based dispatch plan","Aligns staging and dispatch with live production progress.",2,16,22]
+        ]
+      }
     ]
   },
 
@@ -29,21 +53,45 @@ const DOMAINS = {
     name:"Maintenance", title:"Maintenance floor", color:"#d49a24",
     stations:["CNC Cell", "Utilities", "Service Bay"],
     issues:[
-      {id:"m1",x:1015,y:185,title:"CNC spindle health is not visible",summary:"Vibration readings rise in the spindle bearing band. The machine still runs, but the pattern may point to bearing wear, imbalance or misalignment.",impact:"Potential to reduce unplanned downtime by 15–25%",rupees:[650000,1100000],loss:"Emergency repair · lost production · expedited parts",options:[
-        ["Keep a larger spare-motor inventory","Can shorten repair waits, but failures still interrupt production.",0,5,9],
-        ["Service every machine on a fixed calendar","Reduces some risk but may service healthy assets too early.",1,10,16],
-        ["Combine vibration sensing with predictive twin models","Flags changing asset behaviour early so work can be planned around production.",2,18,25]
-      ]},
-      {id:"m2",x:1245,y:455,title:"Utility consumption spikes go unnoticed",summary:"Compressor load stays high when production demand is low. Small leaks and pressure losses may be wasting energy across the pipe network.",impact:"Potential to reduce avoidable utility use by 8–16%",rupees:[250000,500000],loss:"Energy waste · leaks · inefficient operating schedules",options:[
-        ["Ask operators to report unusual usage","Useful observations, but intermittent and difficult to quantify.",0,3,6],
-        ["Review monthly utility bills","Shows overall trends after the fact, not the source of a spike.",1,7,11],
-        ["Monitor equipment-level utility signals in the twin","Connects usage patterns to assets and helps prioritize corrective action.",2,12,16]
-      ]},
-      {id:"m3",x:700,y:730,title:"Maintenance planning clashes with production",summary:"Preventive jobs are booked without checking asset condition, order priority or the production plan. Teams stop busy machines or delay needed work.",impact:"Potential to reduce maintenance-related schedule disruption by 10–20%",rupees:[400000,750000],loss:"Schedule changes · overtime · avoidable changeovers",options:[
-        ["Keep maintenance on fixed weekend slots","Simple to coordinate, but may not match actual asset condition.",0,4,7],
-        ["Coordinate weekly planning meetings","Improves communication but relies on manually shared information.",1,8,13],
-        ["Use asset health and production plans in one twin","Suggests service windows using equipment condition and planned demand.",2,14,20]
-      ]}
+      {
+        id:"m1", x:1015, y:185,
+        title:"Abnormal CNC spindle vibration signature",
+        summary:"Accelerometer readings show increasing vibration amplitude around the spindle's bearing frequency range. The machine has not failed yet, but the vibration pattern may indicate bearing degradation, shaft imbalance or misalignment.",
+        impact:"Potential to reduce unplanned downtime by 15–25%",
+        rupees:[650000,1100000],
+        loss:"Emergency repair · lost production · expedited parts",
+        options:[
+          ["Keep a larger spare-motor inventory","Can shorten repair waits, but failures still interrupt production.",0,5,9],
+          ["Service every machine on a fixed calendar","Reduces some risk but may service healthy assets too early.",1,10,16],
+          ["Combine vibration sensing with predictive twin models","Flags changing asset behaviour early so work can be planned around production.",2,18,25]
+        ]
+      },
+      {
+        id:"m2", x:1245, y:455,
+        title:"Compressed-air network pressure loss",
+        summary:"Compressor loading remains unusually high during low-demand production periods. Pressure decay across the distribution network suggests possible pneumatic leaks, inefficient pressure regulation or unnecessary air consumption.",
+        impact:"Potential to reduce avoidable utility use by 8–16%",
+        rupees:[250000,500000],
+        loss:"Energy waste · leaks · inefficient operating schedules",
+        options:[
+          ["Ask operators to report unusual usage","Useful observations, but intermittent and difficult to quantify.",0,3,6],
+          ["Review monthly utility bills","Shows overall trends after the fact, not the source of a spike.",1,7,11],
+          ["Monitor equipment-level utility signals in the twin","Connects usage patterns to assets and helps prioritize corrective action.",2,12,16]
+        ]
+      },
+      {
+        id:"m3", x:700, y:730,
+        title:"CMMS work orders conflict with production schedules",
+        summary:"Preventive maintenance work orders are generated without considering live asset condition, production order priority or planned machine utilization. This causes maintenance windows to overlap with critical production runs.",
+        impact:"Potential to reduce maintenance-related schedule disruption by 10–20%",
+        rupees:[400000,750000],
+        loss:"Schedule changes · overtime · avoidable changeovers",
+        options:[
+          ["Keep maintenance on fixed weekend slots","Simple to coordinate, but may not match actual asset condition.",0,4,7],
+          ["Coordinate weekly planning meetings","Improves communication but relies on manually shared information.",1,8,13],
+          ["Use asset health and production plans in one twin","Suggests service windows using equipment condition and planned demand.",2,14,20]
+        ]
+      }
     ]
   },
 
@@ -51,21 +99,45 @@ const DOMAINS = {
     name:"Quality", title:"Quality inspection floor", color:"#8c72ce",
     stations:["Incoming", "Process Check", "Final QA"],
     issues:[
-      {id:"q1",x:1030,y:445,title:"Defects are detected at the end of the line",summary:"Scratches, dents and finish defects are found after several process steps. The team must trace the batch and decide what to scrap or recheck.",impact:"Potential to reduce late-stage defect escapes by 15–25%",rupees:[500000,900000],loss:"Scrap · rework · returns · inspection effort",options:[
-        ["Add more end-of-line inspectors","Adds inspection capacity, but defects are still found late.",0,4,8],
-        ["Increase batch sampling frequency","Finds more issues, though samples can miss intermittent defects.",1,9,15],
-        ["Deploy inline vision linked to process data","Detects defects closer to their source and connects patterns to process conditions.",2,18,25]
-      ]},
-      {id:"q2",x:785,y:450,title:"Quality records are disconnected",summary:"Gauge readings, batch IDs and machine parameters sit in separate records. When a defect appears, the team cannot see which settings were active.",impact:"Potential to reduce investigation time by 20–30%",rupees:[220000,450000],loss:"Manual record matching · repeated investigations · delayed closure",options:[
-        ["Create a common spreadsheet template","Standardizes entries but still requires manual consolidation.",0,5,9],
-        ["Build a shared quality dashboard","Makes trends easier to see, with continued manual data collection.",1,12,18],
-        ["Connect inspection and machine data to the twin","Links quality outcomes with operating conditions for faster root-cause analysis.",2,22,30]
-      ]},
-      {id:"q3",x:1010,y:185,title:"Process drift is noticed too late",summary:"Part dimensions slowly move toward a control limit as tools wear or process temperature changes. The issue is noticed only after readings fall out of range.",impact:"Potential to reduce process-drift exposure by 10–20%",rupees:[350000,700000],loss:"Off-spec batches · rework · delayed corrective action",options:[
-        ["Increase manual checks","Adds checkpoints, but gaps remain between inspections.",0,4,8],
-        ["Set tighter fixed process limits","Can catch known deviations but may not adapt to changing conditions.",1,9,14],
-        ["Use twin-based trend detection and what-if tests","Surfaces drift patterns and helps test adjustments before applying them.",2,15,20]
-      ]}
+      {
+        id:"q1", x:1030, y:445,
+        title:"Surface defects escape upstream inspection",
+        summary:"Visual defects such as scratches, dents and coating irregularities are detected only during final inspection. The affected batch must be traced across preceding process stages, increasing rework and containment effort.",
+        impact:"Potential to reduce late-stage defect escapes by 15–25%",
+        rupees:[500000,900000],
+        loss:"Scrap · rework · returns · inspection effort",
+        options:[
+          ["Add more end-of-line inspectors","Adds inspection capacity, but defects are still found late.",0,4,8],
+          ["Increase batch sampling frequency","Finds more issues, though samples can miss intermittent defects.",1,9,15],
+          ["Deploy inline vision linked to process data","Detects defects closer to their source and connects patterns to process conditions.",2,18,25]
+        ]
+      },
+      {
+        id:"q2", x:785, y:450,
+        title:"Disconnected gauge, batch and PLC records",
+        summary:"Dimensional inspection readings, batch identifiers and machine operating parameters are stored in separate systems. Without consistent OPC UA data mapping, quality engineers cannot correlate a defective batch with the machine settings active during production.",
+        impact:"Potential to reduce investigation time by 20–30%",
+        rupees:[220000,450000],
+        loss:"Manual record matching · repeated investigations · delayed closure",
+        options:[
+          ["Create a common spreadsheet template","Standardizes entries but still requires manual consolidation.",0,5,9],
+          ["Build a shared quality dashboard","Makes trends easier to see, with continued manual data collection.",1,12,18],
+          ["Connect inspection and machine data to the twin","Links quality outcomes with operating conditions for faster root-cause analysis.",2,22,30]
+        ]
+      },
+      {
+        id:"q3", x:1010, y:185,
+        title:"Gradual dimensional drift in critical parameters",
+        summary:"Repeated gauge measurements show a gradual shift in component dimensions toward the upper control limit. Tool wear, temperature variation or process instability may be introducing a trend that is not detected by individual pass/fail inspections.",
+        impact:"Potential to reduce process-drift exposure by 10–20%",
+        rupees:[350000,700000],
+        loss:"Off-spec batches · rework · delayed corrective action",
+        options:[
+          ["Increase manual checks","Adds checkpoints, but gaps remain between inspections.",0,4,8],
+          ["Set tighter fixed process limits","Can catch known deviations but may not adapt to changing conditions.",1,9,14],
+          ["Use twin-based trend detection and what-if tests","Surfaces drift patterns and helps test adjustments before applying them.",2,15,20]
+        ]
+      }
     ]
   }
 };
@@ -119,7 +191,6 @@ function renderMap() {
   svg.innerHTML = `<defs><filter id="markerShadow" x="-80%" y="-80%" width="260%" height="260%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#263b32" flood-opacity=".28"/></filter></defs>`;
   domain.issues.forEach((issue)=>{
     const done=resolved.has(issue.id), meta=ISSUE_META[issue.id], g=document.createElementNS(NS,"g");
-    // Keep both the error marker and its short label inside the illustrated factory.
     const x=Math.max(104,Math.min(1432,issue.x));
     const y=Math.max(122,Math.min(940,issue.y));
     g.setAttribute("class",`hotspot ${done?"is-done":""}`);
@@ -180,7 +251,6 @@ function showHint(issue,toolId){
     : `<div class="feedback-mark is-hint">↗</div><p class="feedback-kicker">THINK IT THROUGH</p><h2>Not quite</h2><p>${esc(meta.clue)}</p><button class="primary-button full-button" id="feedback-back">Back to map <span>→</span></button>`;
   $("#feedback-modal").hidden=false;
 
-  // Commit a correct match as soon as it is made. Closing the message is only a UI action.
   if(correct)completeIssue(issue);
 
   const closeFeedback=()=>{
